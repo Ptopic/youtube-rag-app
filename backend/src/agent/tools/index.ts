@@ -52,3 +52,41 @@ export const retrievalTool = tool(
 		}),
 	}
 );
+
+export const retrieveSimilarVideosTool = tool(
+	async ({ query }) => {
+		const vectorStore = await getVectorStore();
+
+		const retrievedDocs = await vectorStore.similaritySearch(query, 30);
+
+		const ids = retrievedDocs.map((doc) => doc.metadata.video_id).join('\n ');
+
+		return ids;
+	},
+	{
+		name: 'retrieveSimilarVideos',
+		description: 'Retrieve the ids of the most similar videos to the query',
+		schema: z.object({
+			query: z.string(),
+		}),
+	}
+);
+
+export const retrieveStoredVideosTool = tool(
+	async ({ query }) => {
+		const vectorStore = await getVectorStore();
+
+		const retrievedDocs = await vectorStore.similaritySearch(query, 30);
+
+		const ids = retrievedDocs.map((doc) => doc.metadata.video_id).join('\n ');
+
+		return ids;
+	},
+	{
+		name: 'retrieveStoredVideos',
+		description: 'Retrieve the ids of the stored videos in the vector store',
+		schema: z.object({
+			query: z.string(),
+		}),
+	}
+);

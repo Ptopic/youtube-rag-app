@@ -3,27 +3,36 @@ import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { Injectable } from '@nestjs/common';
 import { ChatDto } from './dtos/chat.dto';
-import { retrievalTool, triggerYoutubeVideoScrapeTool } from './tools';
+import {
+	retrievalTool,
+	retrieveSimilarVideosTool,
+	retrieveStoredVideosTool,
+	triggerYoutubeVideoScrapeTool,
+} from './tools';
 
 @Injectable()
 export class AgentService {
 	private readonly llm = new ChatAnthropic({
-		modelName: 'claude-3-5-sonnet-latest',
+		modelName: 'claude-3-7-sonnet-latest',
+	});
+
+	private readonly memorySaver = new MemorySaver();
+
+	private readonly agent = createReactAgent({
+		llm: this.llm,
+		tools: [
+			retrievalTool,
+			triggerYoutubeVideoScrapeTool,
+			retrieveSimilarVideosTool,
+			retrieveStoredVideosTool,
+		],
+		checkpointSaver: this.memorySaver,
 	});
 
 	async chat(chatDto: ChatDto) {
 		const { message, thread_id } = chatDto;
 
-		// Add long-term memory to Agent
-		const memorySaver = new MemorySaver();
-
-		const agent = createReactAgent({
-			llm: this.llm,
-			tools: [retrievalTool, triggerYoutubeVideoScrapeTool],
-			checkpointer: memorySaver,
-		});
-
-		const results = await agent.invoke(
+		const results = await this.agent.invoke(
 			{
 				messages: [{ role: 'user', content: message }],
 			},
