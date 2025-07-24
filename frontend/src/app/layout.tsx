@@ -12,29 +12,27 @@ import './globals.css';
 export const metadata = metadataConfig;
 
 export default async function RootLayout({
-	children,
+   children,
 }: Readonly<{
-	children: React.ReactNode;
-	title: string;
-	data: number;
+   children: React.ReactNode;
 }>) {
-	return (
-		<html lang="en">
-			<body
-				id="app"
-				className={twMerge(
-					spaceGrotesk.variable,
-					exo.variable,
-					spaceMono.variable,
-					'overscroll-none bg-neutral1000'
-				)}
-			>
-				<App>
-					<NextTopLoader color="#00E1FF" showSpinner={false} />
-					<ScrollToTop />
-					{children}
-				</App>
-			</body>
-		</html>
-	);
+   return (
+      <html lang='en'>
+         <body
+            id='app'
+            className={twMerge(
+               spaceGrotesk.variable,
+               exo.variable,
+               spaceMono.variable,
+               'bg-neutral1000 overscroll-none'
+            )}
+         >
+            <App>
+               <NextTopLoader color='#00E1FF' showSpinner={false} />
+               <ScrollToTop />
+               {children}
+            </App>
+         </body>
+      </html>
+   );
 }
