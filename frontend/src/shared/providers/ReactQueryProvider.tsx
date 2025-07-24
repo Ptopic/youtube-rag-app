@@ -1,34 +1,35 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import {
-  HydrationBoundary,
-  QueryClient,
-  QueryClientProvider,
-  dehydrate,
-} from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClientDefaultOptions } from '@shared/queryClient';
+import {
+   HydrationBoundary,
+   QueryClient,
+   QueryClientProvider,
+   dehydrate,
+} from '@tanstack/react-query';
+import { ReactNode, useState } from 'react';
 
 interface IProps {
-  children: ReactNode;
+   children: ReactNode;
 }
 
 const ReactQueryProvider = ({ children }: IProps) => {
-  const [client] = useState(
-    () => new QueryClient({ ...queryClientDefaultOptions }),
-  );
+   const [client] = useState(
+      () => new QueryClient({ ...queryClientDefaultOptions })
+   );
 
-  const dehydratedState = dehydrate(client, {
-    shouldDehydrateQuery: () => true,
-  });
+   const dehydratedState = dehydrate(client, {
+      shouldDehydrateQuery: () => true,
+   });
 
-  return (
-    <QueryClientProvider client={client}>
-      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
-      <ReactQueryDevtools />
-    </QueryClientProvider>
-  );
+   return (
+      <QueryClientProvider client={client}>
+         <HydrationBoundary state={dehydratedState}>
+            {children}
+         </HydrationBoundary>
+         {/* <ReactQueryDevtools /> */}
+      </QueryClientProvider>
+   );
 };
 
 export default ReactQueryProvider;

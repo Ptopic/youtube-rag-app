@@ -3,6 +3,7 @@ import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { ChatDto } from './dtos/chat.dto';
 import { userPrompt } from './prompts';
 import {
@@ -52,5 +53,63 @@ export class AgentService {
 		);
 
 		return results.messages.at(-1).content;
+	}
+
+	streamChat(chatDto: ChatDto): Observable<string> {
+		const { message, thread_id } = chatDto;
+
+		return new Observable((subscriber) => {
+			(async () => {
+				try {
+					const formattedPrompt = await this.promptTemplate.format({
+						message: message,
+					});
+
+					let isStreamingFinalResponse = false;
+
+					const streamingLlm = new ChatOpenAI({
+						modelName: 'gpt-4.1-mini',
+						streaming: true,
+						callbacks: [
+							{
+								handleLLMNewToken(token: string) {
+									if (isStreamingFinalResponse) {
+										subscriber.next(token);
+									}
+								},
+								handleLLMError(err: Error) {
+									subscriber.error(err);
+								},
+								handleLLMStart() {
+									isStreamingFinalResponse = true;
+								},
+							},
+						],
+					});
+
+					const streamingAgent = createReactAgent({
+						llm: streamingLlm,
+						tools: [
+							retrievalTool,
+							triggerYoutubeVideoScrapeTool,
+							retrieveSimilarVideosTool,
+							retrieveStoredVideosTool,
+						],
+						checkpointSaver: this.memorySaver,
+					});
+
+					await streamingAgent.invoke(
+						{
+							messages: [{ role: 'user', content: formattedPrompt }],
+						},
+						{ configurable: { thread_id } }
+					);
+
+					subscriber.complete();
+				} catch (error) {
+					subscriber.error(error);
+				}
+			})();
+		});
 	}
 }

@@ -1,29 +1,109 @@
 'use client';
 
-import useChat from '@api/agent/hooks/useLogin';
+import { useStreamingChat } from '@api/agent/hooks/useStreamingChat';
 import MarkdownWithCode from '@components/markdownWithCode/MarkdownWithCode';
+import { ArrowDownIcon } from '@shared/svgs';
 import { useEffect, useRef, useState } from 'react';
 
 interface Message {
    id: number;
    text: string;
    isUser: boolean;
+   isStreaming?: boolean;
 }
 
 const HomePage = () => {
    const [messages, setMessages] = useState<Message[]>([]);
    const [inputText, setInputText] = useState('');
-   const [threadId, setThreadId] = useState<number>(Date.now());
+   const [threadId, setThreadId] = useState<string>(Date.now().toString());
+   const [streamingMessageId, setStreamingMessageId] = useState<number | null>(
+      null
+   );
    const messagesEndRef = useRef<HTMLDivElement>(null);
+   const lastUserMessageRef = useRef<HTMLDivElement>(null);
+   const [isScrolledUp, setIsScrolledUp] = useState(false);
 
-   const { mutate: sendChatMessage, isPending: isChatPending } = useChat();
+   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+   const {
+      streamedContent,
+      isStreaming,
+      isStartingStreaming,
+      error,
+      startStreaming,
+      stopStreaming,
+      clearContent,
+   } = useStreamingChat();
 
    useEffect(() => {
-      scrollToBottom();
-   }, [messages]);
+      if (isStreaming && streamingMessageId && streamedContent) {
+         setMessages((prev) =>
+            prev.map((msg) =>
+               msg.id === streamingMessageId
+                  ? { ...msg, text: streamedContent }
+                  : msg
+            )
+         );
+      }
+   }, [streamedContent, isStreaming, streamingMessageId]);
 
-   const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   useEffect(() => {
+      if (messages.length > 0) {
+         const userMessages = messages.filter((msg) => msg.isUser);
+         if (userMessages.length > 0) {
+            setTimeout(() => {
+               scrollToLastUserMessage();
+            }, 100);
+         }
+      }
+   }, [messages.filter((msg) => msg.isUser).length]);
+
+   useEffect(() => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer) return;
+
+      const handleScroll = () => {
+         const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+
+         const tolerance = 100;
+         const isNearBottom =
+            scrollTop + clientHeight >= scrollHeight - tolerance;
+
+         setIsScrolledUp(!isNearBottom);
+      };
+
+      scrollContainer.addEventListener('scroll', handleScroll);
+
+      handleScroll();
+
+      return () => {
+         scrollContainer.removeEventListener('scroll', handleScroll);
+      };
+   }, []);
+
+   useEffect(() => {
+      if (scrollContainerRef.current) {
+         setTimeout(() => {
+            const scrollContainer = scrollContainerRef.current;
+            if (scrollContainer) {
+               const { scrollTop, scrollHeight, clientHeight } =
+                  scrollContainer;
+               const tolerance = 100;
+               const isNearBottom =
+                  scrollTop + clientHeight >= scrollHeight - tolerance;
+               setIsScrolledUp(!isNearBottom);
+            }
+         }, 50);
+      }
+   }, [messages.length]);
+
+   const scrollToLastUserMessage = () => {
+      if (lastUserMessageRef.current) {
+         lastUserMessageRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+         });
+      }
    };
 
    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -38,147 +118,227 @@ const HomePage = () => {
    };
 
    const sendMessage = async () => {
-      if (inputText.trim() === '') return;
+      if (inputText.trim() === '' || isStreaming) return;
 
-      const userMessage = {
+      const userMessage: Message = {
          id: Date.now(),
          text: inputText.trim(),
          isUser: true,
       };
 
       setMessages((prev) => [...prev, userMessage]);
+
+      const messageToSend = inputText.trim();
       setInputText('');
 
-      sendChatMessage(
-         {
-            message: inputText.trim(),
-            thread_id: threadId.toString(),
-         },
-         {
-            onSuccess: (data) => {
-               console.log(data);
-               const aiMessage = {
-                  id: Date.now(),
-                  text: data,
-                  isUser: false,
-               };
+      const aiMessageId = Date.now() + 1;
+      const aiMessage: Message = {
+         id: aiMessageId,
+         text: '',
+         isUser: false,
+         isStreaming: true,
+      };
 
-               setMessages((prev) => [...prev, aiMessage]);
-            },
-            onError: (error) => {
-               console.error('Error sending chat message:', error);
+      setMessages((prev) => [...prev, aiMessage]);
+      setStreamingMessageId(aiMessageId);
 
-               const errorMessage = {
-                  id: Date.now(),
-                  text: 'Sorry, there was an error processing your request.',
-                  isUser: false,
-               };
+      clearContent();
 
-               setMessages((prev) => [...prev, errorMessage]);
-            },
-         }
-      );
+      try {
+         await startStreaming({
+            message: messageToSend,
+            thread_id: threadId,
+         });
+
+         setMessages((prev) => {
+            const updatedMessages = prev.map((msg) =>
+               msg.id === aiMessageId ? { ...msg, isStreaming: false } : msg
+            );
+            return updatedMessages;
+         });
+         setStreamingMessageId(null);
+      } catch (error) {
+         console.error('Error sending chat message:', error);
+
+         setMessages((prev) =>
+            prev.map((msg) =>
+               msg.id === aiMessageId
+                  ? {
+                       ...msg,
+                       text: 'Sorry, there was an error processing your request.',
+                       isStreaming: false,
+                    }
+                  : msg
+            )
+         );
+         setStreamingMessageId(null);
+      }
+   };
+
+   const handleStopStreaming = () => {
+      stopStreaming();
+
+      if (streamingMessageId) {
+         setMessages((prev) =>
+            prev.map((msg) =>
+               msg.id === streamingMessageId
+                  ? { ...msg, isStreaming: false }
+                  : msg
+            )
+         );
+         setStreamingMessageId(null);
+      }
    };
 
    const resetChat = () => {
       setMessages([]);
-      setThreadId(Date.now());
+      setThreadId(Date.now().toString());
+      clearContent();
+      setStreamingMessageId(null);
+      if (isStreaming) {
+         stopStreaming();
+      }
+   };
+
+   const getMessageContent = (message: Message) => {
+      return message.text;
+   };
+
+   const scrollToBottom = () => {
+      if (scrollContainerRef.current) {
+         scrollContainerRef.current.scrollTo({
+            top: scrollContainerRef.current.scrollHeight,
+            behavior: 'smooth',
+         });
+      }
    };
 
    return (
-      <div className='mx-auto flex h-[100dvh] max-w-4xl flex-col px-4'>
-         {/* Chat Header */}
-         <header className='flex items-center justify-between border-b border-border py-4'>
-            <h1 className='text-2xl font-medium text-text'>AI Chat</h1>
-            <button
-               className='flex cursor-pointer items-center gap-2 rounded border border-border bg-transparent px-3 py-2 text-sm text-text transition-colors hover:bg-white hover:bg-opacity-5'
-               onClick={resetChat}
-            >
-               <svg
-                  width='16'
-                  height='16'
-                  viewBox='0 0 16 16'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-               >
-                  <path
-                     d='M8 3V1L4 5L8 9V7C10.21 7 12 8.79 12 11C12 13.21 10.21 15 8 15C5.79 15 4 13.21 4 11H2C2 14.31 4.69 17 8 17C11.31 17 14 14.31 14 11C14 7.69 11.31 5 8 5V3Z'
-                     fill='currentColor'
-                  />
-               </svg>
-               New Chat
-            </button>
-         </header>
+      <div
+         ref={scrollContainerRef}
+         className='flex h-[100dvh] flex-col overflow-y-scroll'
+      >
+         <div className='mx-auto flex h-full w-full flex-col px-4 py-4 lg:w-[50%]'>
+            <div className='flex flex-1 flex-col gap-4 py-4'>
+               {messages.length === 0 ? (
+                  <div className='flex h-full flex-col items-center justify-center p-8 text-center text-text-secondary'>
+                     <p>Start your conversation.</p>
+                  </div>
+               ) : (
+                  messages.map((message, index) => {
+                     const userMessages = messages.filter((msg) => msg.isUser);
+                     const isLastUserMessage =
+                        message.isUser &&
+                        userMessages.length > 0 &&
+                        message.id === userMessages[userMessages.length - 1].id;
 
-         {/* Messages Container */}
-         <div className='flex flex-1 flex-col gap-4 overflow-y-auto py-4'>
-            {messages.length === 0 ? (
-               <div className='flex h-full flex-col items-center justify-center p-8 text-center text-text-secondary'>
-                  <p>Start your conversation with the AI</p>
-               </div>
-            ) : (
-               messages.map((message) => (
+                     return (
+                        <div
+                           key={message.id}
+                           ref={isLastUserMessage ? lastUserMessageRef : null}
+                           data-message-id={message.id}
+                           className={`flex max-w-full animate-fade-in gap-3 p-3 px-4 ${
+                              message.isUser
+                                 ? 'self-end rounded-full bg-user-message'
+                                 : 'self-start !px-0 !pb-12 !pt-0'
+                           } ${index === messages.length - 1 && 'min-h-[85dvh] lg:min-h-[90dvh]'}`}
+                        >
+                           <div className='whitespace-pre-wrap break-words text-text'>
+                              <MarkdownWithCode
+                                 markdown={getMessageContent(message)}
+                              />
+                              {message.isStreaming &&
+                                 message.id === streamingMessageId &&
+                                 isStartingStreaming && (
+                                    <span className='inline-block h-3 w-3 animate-pulse rounded-full bg-primary' />
+                                 )}
+                           </div>
+                        </div>
+                     );
+                  })
+               )}
+
+               {error && (
+                  <div className='flex max-w-full animate-fade-in gap-3 self-start rounded-lg border border-red-200 bg-red-50 p-3'>
+                     <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-600'>
+                        !
+                     </div>
+                     <div className='text-red-700'>
+                        <strong>Error:</strong> {error}
+                     </div>
+                  </div>
+               )}
+
+               <div ref={messagesEndRef} />
+            </div>
+
+            <div className='fixed bottom-0 left-1/2 flex w-[calc(100dvw-24px)] -translate-x-1/2 flex-col gap-4 lg:w-[50%]'>
+               {isScrolledUp && (
                   <div
-                     key={message.id}
-                     className={`flex max-w-full animate-fade-in gap-3 rounded-lg p-3 ${
-                        message.isUser
-                           ? 'self-end bg-user-message'
-                           : 'self-start bg-ai-message'
-                     }`}
+                     className='flex cursor-pointer items-center justify-center'
+                     onClick={scrollToBottom}
                   >
-                     <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary bg-opacity-10 text-xs font-semibold text-primary'>
-                        {message.isUser ? 'You' : 'AI'}
-                     </div>
-                     <div className='whitespace-pre-wrap break-words text-text'>
-                        <MarkdownWithCode markdown={message.text} />
-                     </div>
+                     <button className='flex cursor-pointer items-center justify-center rounded-full border border-border bg-background p-2'>
+                        <ArrowDownIcon className='h-5 w-5' />
+                     </button>
                   </div>
-               ))
-            )}
-            {isChatPending && (
-               <div className='flex max-w-full animate-fade-in gap-3 self-start rounded-lg bg-ai-message p-3'>
-                  <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary bg-opacity-10 text-xs font-semibold text-primary'>
-                     AI
-                  </div>
-                  <div className='flex items-center gap-1.5'>
-                     <span className='h-2 w-2 animate-pulse-dot rounded-full bg-text-secondary'></span>
-                     <span className='h-2 w-2 animate-pulse-dot-delay-1 rounded-full bg-text-secondary'></span>
-                     <span className='h-2 w-2 animate-pulse-dot-delay-2 rounded-full bg-text-secondary'></span>
-                  </div>
-               </div>
-            )}
-            <div ref={messagesEndRef} />
-         </div>
+               )}
 
-         {/* Input Container */}
-         <div className='flex gap-2 border-t border-border py-4'>
-            <textarea
-               value={inputText}
-               onChange={handleInputChange}
-               onKeyDown={handleKeyDown}
-               placeholder='Type your message...'
-               disabled={isChatPending}
-               rows={1}
-               className='min-h-[48px] flex-1 resize-none rounded-lg border border-border bg-surface px-4 py-3 font-sans text-base text-text outline-none transition-colors placeholder:text-text-secondary focus:border-primary disabled:opacity-50'
-            />
-            <button
-               className='flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border-none bg-primary text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-disabled disabled:opacity-50'
-               onClick={sendMessage}
-               disabled={inputText.trim() === '' || isChatPending}
-            >
-               <svg
-                  width='24'
-                  height='24'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-               >
-                  <path
-                     d='M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z'
-                     fill='currentColor'
+               <div className='flex items-center gap-2 bg-background pb-4'>
+                  <textarea
+                     value={inputText}
+                     onChange={handleInputChange}
+                     onKeyDown={handleKeyDown}
+                     placeholder='Type your message...'
+                     rows={1}
+                     className='hidden min-h-[48px] flex-1 resize-none rounded-lg border border-border bg-surface px-4 py-3 font-sans text-base text-text outline-none transition-colors placeholder:text-text-secondary focus:border-primary lg:flex'
                   />
-               </svg>
-            </button>
+                  <textarea
+                     value={inputText}
+                     onChange={handleInputChange}
+                     placeholder='Type your message...'
+                     rows={1}
+                     className='flex min-h-[48px] flex-1 resize-none rounded-lg border border-border bg-surface px-4 py-3 font-sans text-base text-text outline-none transition-colors placeholder:text-text-secondary focus:border-primary lg:hidden'
+                  />
+                  <button
+                     className='flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border-none bg-primary text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-disabled'
+                     onClick={isStreaming ? handleStopStreaming : sendMessage}
+                     disabled={inputText.trim() === '' && !isStreaming}
+                  >
+                     {isStreaming ? (
+                        <svg
+                           width='16'
+                           height='16'
+                           viewBox='0 0 16 16'
+                           fill='none'
+                           xmlns='http://www.w3.org/2000/svg'
+                        >
+                           <rect
+                              x='2'
+                              y='2'
+                              width='12'
+                              height='12'
+                              rx='2'
+                              fill='currentColor'
+                           />
+                        </svg>
+                     ) : (
+                        <svg
+                           width='24'
+                           height='24'
+                           viewBox='0 0 24 24'
+                           fill='none'
+                           xmlns='http://www.w3.org/2000/svg'
+                        >
+                           <path
+                              d='M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z'
+                              fill='currentColor'
+                           />
+                        </svg>
+                     )}
+                  </button>
+               </div>
+            </div>
          </div>
       </div>
    );
