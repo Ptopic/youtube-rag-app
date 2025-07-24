@@ -3,13 +3,11 @@ import { Document } from '@langchain/core/documents';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 
-// Create embeddings
 const embeddings = new OpenAIEmbeddings({
 	model: 'text-embedding-3-large',
 	dimensions: 1536,
 });
 
-// Initialize vector store lazily
 let vectorStoreInstance: PGVectorStore | null = null;
 
 export const getVectorStore = async (): Promise<PGVectorStore> => {
@@ -43,7 +41,6 @@ export const addYTVideoToVectorStore = async (videoData) => {
 		}),
 	];
 
-	// Split the video into chunks
 	const splitter = new RecursiveCharacterTextSplitter({
 		chunkSize: 1000,
 		chunkOverlap: 200,
@@ -51,6 +48,5 @@ export const addYTVideoToVectorStore = async (videoData) => {
 
 	const chunks = await splitter.splitDocuments(docs);
 
-	// Store embeddings
 	await vectorStore.addDocuments(chunks);
 };

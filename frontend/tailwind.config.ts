@@ -9,11 +9,10 @@ const config: Config = {
    ],
    theme: {
       extend: {
-         // Move colors to extend so they don't override Tailwind defaults
          colors: {
             background: '#121212',
             surface: '#1e1e1e',
-            primary: '#bb86fc',
+            primary: '#ff0000',
             text: '#e0e0e0',
             'text-secondary': '#a0a0a0',
             'user-message': '#2d2d2d',
@@ -22,10 +21,10 @@ const config: Config = {
             disabled: '#505050',
          },
          fontSize: {
-            'chat-lg': ['1.125rem', '1.6'], // 18px
-            'chat-xl': ['1.25rem', '1.6'], // 20px
-            'chat-2xl': ['1.5rem', '1.6'], // 24px
-            'chat-sm': ['0.875rem', '1.6'], // 14px
+            'chat-lg': ['1.125rem', '1.6'],
+            'chat-xl': ['1.25rem', '1.6'],
+            'chat-2xl': ['1.5rem', '1.6'],
+            'chat-sm': ['0.875rem', '1.6'],
          },
          backgroundImage: {
             'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
