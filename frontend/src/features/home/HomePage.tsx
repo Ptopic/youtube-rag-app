@@ -278,6 +278,7 @@ const HomePage = () => {
                            <div className='min-w-0 text-text'>
                               <MarkdownWithCode
                                  markdown={getMessageContent(message)}
+                                 isUser={message.isUser}
                               />
                               {message.isStreaming &&
                                  message.id === streamingMessageId &&
