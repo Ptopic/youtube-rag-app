@@ -1,6 +1,7 @@
 'use client';
 
 import useChat from '@api/agent/hooks/useLogin';
+import MarkdownWithCode from '@components/markdownWithCode/MarkdownWithCode';
 import { useEffect, useRef, useState } from 'react';
 
 interface Message {
@@ -87,10 +88,10 @@ const HomePage = () => {
    return (
       <div className='mx-auto flex h-[100dvh] max-w-4xl flex-col px-4'>
          {/* Chat Header */}
-         <header className='border-border flex items-center justify-between border-b py-4'>
-            <h1 className='text-text text-2xl font-medium'>AI Chat</h1>
+         <header className='flex items-center justify-between border-b border-border py-4'>
+            <h1 className='text-2xl font-medium text-text'>AI Chat</h1>
             <button
-               className='bg-transparent border-border text-text flex cursor-pointer items-center gap-2 rounded border px-3 py-2 text-sm transition-colors hover:bg-white hover:bg-opacity-5'
+               className='flex cursor-pointer items-center gap-2 rounded border border-border bg-transparent px-3 py-2 text-sm text-text transition-colors hover:bg-white hover:bg-opacity-5'
                onClick={resetChat}
             >
                <svg
@@ -112,37 +113,37 @@ const HomePage = () => {
          {/* Messages Container */}
          <div className='flex flex-1 flex-col gap-4 overflow-y-auto py-4'>
             {messages.length === 0 ? (
-               <div className='text-text-secondary flex h-full flex-col items-center justify-center p-8 text-center'>
+               <div className='flex h-full flex-col items-center justify-center p-8 text-center text-text-secondary'>
                   <p>Start your conversation with the AI</p>
                </div>
             ) : (
                messages.map((message) => (
                   <div
                      key={message.id}
-                     className={`animate-fade-in flex max-w-full gap-3 rounded-lg p-3 ${
+                     className={`flex max-w-full animate-fade-in gap-3 rounded-lg p-3 ${
                         message.isUser
-                           ? 'bg-user-message self-end'
-                           : 'bg-ai-message self-start'
+                           ? 'self-end bg-user-message'
+                           : 'self-start bg-ai-message'
                      }`}
                   >
-                     <div className='text-primary bg-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-opacity-10 text-xs font-semibold'>
+                     <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary bg-opacity-10 text-xs font-semibold text-primary'>
                         {message.isUser ? 'You' : 'AI'}
                      </div>
-                     <div className='text-text whitespace-pre-wrap break-words'>
-                        {message.text}
+                     <div className='whitespace-pre-wrap break-words text-text'>
+                        <MarkdownWithCode markdown={message.text} />
                      </div>
                   </div>
                ))
             )}
             {isChatPending && (
-               <div className='animate-fade-in bg-ai-message flex max-w-full gap-3 self-start rounded-lg p-3'>
-                  <div className='text-primary bg-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-opacity-10 text-xs font-semibold'>
+               <div className='flex max-w-full animate-fade-in gap-3 self-start rounded-lg bg-ai-message p-3'>
+                  <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary bg-opacity-10 text-xs font-semibold text-primary'>
                      AI
                   </div>
                   <div className='flex items-center gap-1.5'>
-                     <span className='bg-text-secondary animate-pulse-dot h-2 w-2 rounded-full'></span>
-                     <span className='bg-text-secondary animate-pulse-dot-delay-1 h-2 w-2 rounded-full'></span>
-                     <span className='bg-text-secondary animate-pulse-dot-delay-2 h-2 w-2 rounded-full'></span>
+                     <span className='h-2 w-2 animate-pulse-dot rounded-full bg-text-secondary'></span>
+                     <span className='h-2 w-2 animate-pulse-dot-delay-1 rounded-full bg-text-secondary'></span>
+                     <span className='h-2 w-2 animate-pulse-dot-delay-2 rounded-full bg-text-secondary'></span>
                   </div>
                </div>
             )}
@@ -150,7 +151,7 @@ const HomePage = () => {
          </div>
 
          {/* Input Container */}
-         <div className='border-border flex gap-2 border-t py-4'>
+         <div className='flex gap-2 border-t border-border py-4'>
             <textarea
                value={inputText}
                onChange={handleInputChange}
@@ -158,10 +159,10 @@ const HomePage = () => {
                placeholder='Type your message...'
                disabled={isChatPending}
                rows={1}
-               className='bg-surface text-text border-border focus:border-primary placeholder:text-text-secondary min-h-[48px] flex-1 resize-none rounded-lg border px-4 py-3 font-sans text-base outline-none transition-colors disabled:opacity-50'
+               className='min-h-[48px] flex-1 resize-none rounded-lg border border-border bg-surface px-4 py-3 font-sans text-base text-text outline-none transition-colors placeholder:text-text-secondary focus:border-primary disabled:opacity-50'
             />
             <button
-               className='bg-primary text-black disabled:bg-disabled flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border-none transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+               className='flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border-none bg-primary text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-disabled disabled:opacity-50'
                onClick={sendMessage}
                disabled={inputText.trim() === '' || isChatPending}
             >

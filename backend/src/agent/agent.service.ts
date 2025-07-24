@@ -1,4 +1,3 @@
-import { ChatAnthropic } from '@langchain/anthropic';
 import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { Injectable } from '@nestjs/common';
@@ -9,11 +8,16 @@ import {
 	retrieveStoredVideosTool,
 	triggerYoutubeVideoScrapeTool,
 } from './tools';
+import { ChatOpenAI } from '@langchain/openai';
 
 @Injectable()
 export class AgentService {
-	private readonly llm = new ChatAnthropic({
-		modelName: 'claude-3-7-sonnet-latest',
+	// private readonly llm = new ChatAnthropic({
+	// 	modelName: 'claude-3-7-sonnet-latest',
+	// });
+
+	private readonly llm = new ChatOpenAI({
+		modelName: 'gpt-4.1-mini',
 	});
 
 	private readonly memorySaver = new MemorySaver();

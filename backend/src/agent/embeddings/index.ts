@@ -32,14 +32,14 @@ export const getVectorStore = async (): Promise<PGVectorStore> => {
 };
 
 export const addYTVideoToVectorStore = async (videoData) => {
-	const { transcript, video_id } = videoData;
+	const { transcript, video_id, title, url } = videoData;
 
 	const vectorStore = await getVectorStore();
 
 	const docs = [
 		new Document({
 			pageContent: transcript,
-			metadata: { video_id },
+			metadata: { video_id, video_title: title, video_url: url },
 		}),
 	];
 
