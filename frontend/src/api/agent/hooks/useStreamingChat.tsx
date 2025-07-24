@@ -22,6 +22,7 @@ export const useStreamingChat = () => {
 
       try {
          const generator = streamChat(chatDto);
+         let isFirstChunk = true;
 
          for await (const chunk of generator) {
             if (abortControllerRef.current?.signal.aborted) {
@@ -29,7 +30,12 @@ export const useStreamingChat = () => {
             }
 
             contentRef.current += chunk;
-            setIsStartingStreaming(false);
+
+            if (isFirstChunk) {
+               setIsStartingStreaming(false);
+               isFirstChunk = false;
+            }
+
             setStreamedContent(contentRef.current);
          }
       } catch (err) {
