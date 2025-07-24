@@ -1,14 +1,16 @@
+import { PromptTemplate } from '@langchain/core/prompts';
 import { MemorySaver } from '@langchain/langgraph';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
 import { ChatDto } from './dtos/chat.dto';
+import { userPrompt } from './prompts';
 import {
 	retrievalTool,
 	retrieveSimilarVideosTool,
 	retrieveStoredVideosTool,
 	triggerYoutubeVideoScrapeTool,
 } from './tools';
-import { ChatOpenAI } from '@langchain/openai';
 
 @Injectable()
 export class AgentService {
@@ -21,6 +23,8 @@ export class AgentService {
 	});
 
 	private readonly memorySaver = new MemorySaver();
+
+	private readonly promptTemplate = PromptTemplate.fromTemplate(userPrompt);
 
 	private readonly agent = createReactAgent({
 		llm: this.llm,
@@ -36,9 +40,13 @@ export class AgentService {
 	async chat(chatDto: ChatDto) {
 		const { message, thread_id } = chatDto;
 
+		const formattedPrompt = await this.promptTemplate.format({
+			message: message,
+		});
+
 		const results = await this.agent.invoke(
 			{
-				messages: [{ role: 'user', content: message }],
+				messages: [{ role: 'user', content: formattedPrompt }],
 			},
 			{ configurable: { thread_id } }
 		);

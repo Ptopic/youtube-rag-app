@@ -81,14 +81,27 @@ export const retrieveSimilarVideosTool = tool(
 
 		const retrievedDocs = await vectorStore.similaritySearch(query, 30);
 
-		const ids = retrievedDocs.map((doc) => doc.metadata.video_id).join('\n ');
+		const uniqueVideos = new Map();
+		retrievedDocs.forEach((doc) => {
+			if (!uniqueVideos.has(doc.metadata.video_id)) {
+				uniqueVideos.set(doc.metadata.video_id, {
+					title: doc.metadata.video_title,
+					url: doc.metadata.video_url,
+				});
+			}
+		});
 
-		return ids;
+		const videoList = Array.from(uniqueVideos.values())
+			.map((video) => `- [${video.title}](${video.url})`)
+			.join('\n');
+
+		return videoList;
 	},
 	{
 		name: 'retrieveSimilarVideos',
-		description:
-			'Retrieve video title and url of the most similar videos to the query. Get video title and url from metadata. DO NOT RETURN VIDEO IDS, ONLY VIDEO TITLE AND URL',
+		description: `Retrieve the most similar videos to the query. 
+		Returns a formatted markdown list of video titles with clickable URLs. 
+		Each video appears only once (no duplicates).`,
 		schema: z.object({
 			query: z.string(),
 		}),
@@ -100,16 +113,29 @@ export const retrieveStoredVideosTool = tool(
 		console.log('Retrieving stored videos');
 		const vectorStore = await getVectorStore();
 
-		const retrievedDocs = await vectorStore.similaritySearch(query, 30);
+		const retrievedDocs = await vectorStore.similaritySearch(query, 100);
 
-		const ids = retrievedDocs.map((doc) => doc.metadata.video_id).join('\n ');
+		const uniqueVideos = new Map();
+		retrievedDocs.forEach((doc) => {
+			if (!uniqueVideos.has(doc.metadata.video_id)) {
+				uniqueVideos.set(doc.metadata.video_id, {
+					title: doc.metadata.video_title,
+					url: doc.metadata.video_url,
+				});
+			}
+		});
 
-		return ids;
+		const videoList = Array.from(uniqueVideos.values())
+			.map((video) => `- [${video.title}](${video.url})`)
+			.join('\n');
+
+		return videoList;
 	},
 	{
 		name: 'retrieveStoredVideos',
-		description:
-			'Retrieve video title and url of the stored videos in the vector store. Get video title and url from metadata. DO NOT RETURN VIDEO IDS, ONLY VIDEO TITLE AND URL',
+		description: `Retrieve all stored videos in the vector store. 
+		Returns a formatted markdown list of video titles with clickable URLs. 
+		Each video appears only once (no duplicates).`,
 		schema: z.object({
 			query: z.string(),
 		}),
