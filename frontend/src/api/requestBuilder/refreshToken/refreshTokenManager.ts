@@ -4,7 +4,6 @@ import { refreshDomainToken } from '@api/requestBuilder/refreshToken/refreshToke
 import { COOKIE_NAME } from '@shared/constants/cookies';
 import { removeAuthTokens, setAuthTokens } from '@shared/utils/auth';
 import { getCookie } from '@shared/utils/cookie';
-import { LOGIN } from '@shared/utils/routes';
 
 class RefreshTokenManager {
    private static instance: RefreshTokenManager;
@@ -37,7 +36,7 @@ class RefreshTokenManager {
          return response;
       } catch (e) {
          await removeAuthTokens();
-         window.location.href = calculatedUrl.includes('admin') ? LOGIN : LOGIN;
+         // window.location.href = calculatedUrl.includes('admin') ? LOGIN : LOGIN;
 
          throw e;
       } finally {
