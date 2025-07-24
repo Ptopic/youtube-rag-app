@@ -258,7 +258,7 @@ const HomePage = () => {
                                  ? 'max-w-[75%] self-end bg-user-message'
                                  : 'max-w-[100%] self-start !px-0 !pb-16 !pt-0',
                               index === messages.length - 1 &&
-                                 'min-h-[87dvh] lg:min-h-[92dvh]'
+                                 'min-h-[calc(100dvh-100px)]'
                            )}
                         >
                            <div className='min-w-0 text-text'>
