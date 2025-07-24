@@ -19,7 +19,7 @@ const HomePage = () => {
    const [streamingMessageId, setStreamingMessageId] = useState<number | null>(
       null
    );
-   const messagesEndRef = useRef<HTMLDivElement>(null);
+
    const lastUserMessageRef = useRef<HTMLDivElement>(null);
    const [isScrolledUp, setIsScrolledUp] = useState(false);
 
@@ -96,6 +96,20 @@ const HomePage = () => {
          }, 50);
       }
    }, [messages.length]);
+
+   useEffect(() => {
+      if (error) {
+         setMessages((prev) => [
+            ...prev,
+            {
+               id: Date.now(),
+               text: 'Something went wrong...',
+               isUser: false,
+               isStreaming: false,
+            },
+         ]);
+      }
+   }, [error]);
 
    const scrollToLastUserMessage = () => {
       if (lastUserMessageRef.current) {
@@ -257,19 +271,6 @@ const HomePage = () => {
                      );
                   })
                )}
-
-               {error && (
-                  <div className='flex max-w-full animate-fade-in gap-3 self-start rounded-lg border border-red-200 bg-red-50 p-3'>
-                     <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-600'>
-                        !
-                     </div>
-                     <div className='text-red-700'>
-                        <strong>Error:</strong> {error}
-                     </div>
-                  </div>
-               )}
-
-               <div ref={messagesEndRef} />
             </div>
 
             <div className='fixed bottom-0 left-1/2 flex w-[calc(100dvw-24px)] -translate-x-1/2 flex-col gap-4 lg:w-[50%]'>
