@@ -4,6 +4,7 @@ import { useStreamingChat } from '@api/agent/hooks/useStreamingChat';
 import MarkdownWithCode from '@components/markdownWithCode/MarkdownWithCode';
 import { ArrowDownIcon } from '@shared/svgs';
 import { useEffect, useRef, useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 interface Message {
    id: number;
@@ -251,13 +252,16 @@ const HomePage = () => {
                            key={message.id}
                            ref={isLastUserMessage ? lastUserMessageRef : null}
                            data-message-id={message.id}
-                           className={`flex max-w-full animate-fade-in gap-3 p-3 px-4 ${
+                           className={twMerge(
+                              'flex animate-fade-in gap-3 rounded-lg p-3 px-4',
                               message.isUser
-                                 ? 'self-end rounded-full bg-user-message'
-                                 : 'self-start !px-0 !pb-12 !pt-0'
-                           } ${index === messages.length - 1 && 'min-h-[85dvh] lg:min-h-[90dvh]'}`}
+                                 ? 'max-w-[75%] self-end bg-user-message'
+                                 : 'max-w-[100%] self-start !px-0 !pb-16 !pt-0',
+                              index === messages.length - 1 &&
+                                 'min-h-[85dvh] lg:min-h-[80dvh]'
+                           )}
                         >
-                           <div className='whitespace-pre-wrap break-words text-text'>
+                           <div className='min-w-0 text-text'>
                               <MarkdownWithCode
                                  markdown={getMessageContent(message)}
                               />
