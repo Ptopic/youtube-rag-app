@@ -248,7 +248,7 @@ const HomePage = () => {
             className='custom-scrollbar flex h-full w-full flex-col overflow-y-scroll px-4 py-4'
             ref={scrollContainerRef}
          >
-            <div className='mx-auto flex w-full flex-1 flex-col gap-4 pb-4 lg:w-[50%]'>
+            <div className='mx-auto flex w-full flex-1 flex-col lg:w-[50%]'>
                {messages.length === 0 ? (
                   <div className='flex h-full flex-col items-center justify-center p-8 text-center text-text-secondary'>
                      <p>Start your conversation.</p>
@@ -270,9 +270,9 @@ const HomePage = () => {
                               'flex animate-fade-in gap-3 rounded-lg p-3 px-4',
                               message.isUser
                                  ? 'max-w-[75%] self-end bg-user-message'
-                                 : 'max-w-[100%] self-start !px-0 !pb-16 !pt-0',
+                                 : 'max-w-[100%] self-start !px-0 !pb-4 !pt-0',
                               index === messages.length - 1 &&
-                                 'min-h-[calc(100dvh-175px)] lg:min-h-[calc(100dvh-190px)]'
+                                 'min-h-[calc(100dvh-140px)] !pb-16 lg:min-h-[calc(100dvh-160px)]'
                            )}
                         >
                            <div className='min-w-0 text-text'>
