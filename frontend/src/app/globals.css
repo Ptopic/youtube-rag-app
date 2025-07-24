@@ -79,3 +79,22 @@
       }
    }
 }
+
+.custom-scrollbar {
+   &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+   }
+
+   &::-webkit-scrollbar-track {
+      background: transparent;
+      margin-top: 5px;
+      margin-bottom: 5px;
+   }
+
+   &::-webkit-scrollbar-thumb {
+      background-color: #2d2d2d;
+      border: none !important;
+      border-radius: 24px;
+   }
+}

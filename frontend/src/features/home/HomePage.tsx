@@ -245,7 +245,7 @@ const HomePage = () => {
             </div>
          </nav>
          <div
-            className='flex h-full w-full flex-col overflow-y-scroll px-4 py-4'
+            className='custom-scrollbar flex h-full w-full flex-col overflow-y-scroll px-4 py-4'
             ref={scrollContainerRef}
          >
             <div className='mx-auto flex w-full flex-1 flex-col gap-4 pb-4 lg:w-[50%]'>
