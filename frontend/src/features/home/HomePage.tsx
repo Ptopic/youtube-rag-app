@@ -2,7 +2,7 @@
 
 import { useStreamingChat } from '@api/agent/hooks/useStreamingChat';
 import MarkdownWithCode from '@components/markdownWithCode/MarkdownWithCode';
-import { ArrowDownIcon } from '@shared/svgs';
+import { ArrowDownIcon, HamburgerIcon, NewChatIcon } from '@shared/svgs';
 import { useEffect, useRef, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
@@ -229,12 +229,26 @@ const HomePage = () => {
    };
 
    return (
-      <div
-         ref={scrollContainerRef}
-         className='flex h-[100dvh] flex-col overflow-y-scroll'
-      >
-         <div className='mx-auto flex h-full w-full flex-col px-4 py-4 lg:w-[50%]'>
-            <div className='flex flex-1 flex-col gap-4 py-4'>
+      <div className='flex h-[100dvh] flex-col'>
+         <nav className='flex items-center justify-between border-b border-border bg-background p-2'>
+            <div className='flex w-full items-center justify-between gap-2'>
+               <button className='flex cursor-pointer items-center justify-center p-4'>
+                  <HamburgerIcon className='h-6 w-6' />
+               </button>
+               <p className='text-xl font-bold'>Youtube AI</p>
+               <button
+                  className='flex cursor-pointer items-center justify-center p-4'
+                  onClick={resetChat}
+               >
+                  <NewChatIcon className='h-6 w-6' />
+               </button>
+            </div>
+         </nav>
+         <div
+            className='flex h-full w-full flex-col overflow-y-scroll px-4 py-4'
+            ref={scrollContainerRef}
+         >
+            <div className='mx-auto flex w-full flex-1 flex-col gap-4 py-4 lg:w-[50%]'>
                {messages.length === 0 ? (
                   <div className='flex h-full flex-col items-center justify-center p-8 text-center text-text-secondary'>
                      <p>Start your conversation.</p>
@@ -258,7 +272,7 @@ const HomePage = () => {
                                  ? 'max-w-[75%] self-end bg-user-message'
                                  : 'max-w-[100%] self-start !px-0 !pb-16 !pt-0',
                               index === messages.length - 1 &&
-                                 'min-h-[calc(100dvh-100px)]'
+                                 'min-h-[calc(100dvh-190px)]'
                            )}
                         >
                            <div className='min-w-0 text-text'>
