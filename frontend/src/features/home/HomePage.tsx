@@ -232,12 +232,12 @@ const HomePage = () => {
       <div className='flex h-[100dvh] flex-col'>
          <nav className='flex items-center justify-between border-b border-border bg-background p-2'>
             <div className='flex w-full items-center justify-between gap-2'>
-               <button className='flex cursor-pointer items-center justify-center p-4'>
+               <button className='flex cursor-pointer items-center justify-center p-2 lg:p-4'>
                   <HamburgerIcon className='h-6 w-6' />
                </button>
                <p className='text-xl font-bold'>Youtube AI</p>
                <button
-                  className='flex cursor-pointer items-center justify-center p-4'
+                  className='flex cursor-pointer items-center justify-center p-2 lg:p-4'
                   onClick={resetChat}
                >
                   <NewChatIcon className='h-6 w-6' />
@@ -248,7 +248,7 @@ const HomePage = () => {
             className='flex h-full w-full flex-col overflow-y-scroll px-4 py-4'
             ref={scrollContainerRef}
          >
-            <div className='mx-auto flex w-full flex-1 flex-col gap-4 py-4 lg:w-[50%]'>
+            <div className='mx-auto flex w-full flex-1 flex-col gap-4 pb-4 lg:w-[50%]'>
                {messages.length === 0 ? (
                   <div className='flex h-full flex-col items-center justify-center p-8 text-center text-text-secondary'>
                      <p>Start your conversation.</p>
@@ -272,7 +272,7 @@ const HomePage = () => {
                                  ? 'max-w-[75%] self-end bg-user-message'
                                  : 'max-w-[100%] self-start !px-0 !pb-16 !pt-0',
                               index === messages.length - 1 &&
-                                 'min-h-[calc(100dvh-190px)]'
+                                 'min-h-[calc(100dvh-175px)] lg:min-h-[calc(100dvh-190px)]'
                            )}
                         >
                            <div className='min-w-0 text-text'>
